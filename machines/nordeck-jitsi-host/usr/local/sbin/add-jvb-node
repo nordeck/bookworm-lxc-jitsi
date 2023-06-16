@@ -1,0 +1,98 @@
+#!/bin/bash
+set -e
+
+# ------------------------------------------------------------------------------
+# ADD-JVB-NODE
+# ------------------------------------------------------------------------------
+# Add an additional Jitsi videobridge2 node to the cluster.
+#
+# Usage:
+#     add-jvb-node <NODE-ADDRESS>
+# ------------------------------------------------------------------------------
+SSH_CONFIG="/root/.ssh/jms-config"
+
+APP="nordeck-jvb"
+APP_REPO="https://github.com/nordeck/bookworm-lxc-jitsi.git"
+INSTALLER="https://raw.githubusercontent.com/nordeck/bookworm-lxc-base/main/installer/ni"
+NODE=$1
+
+JITSI_ROOTFS="/var/lib/lxc/nordeck-jitsi/rootfs"
+JVB_ROOTFS="/var/lib/lxc/nordeck-jvb/rootfs"
+
+ssh_() {
+    ssh -F $SSH_CONFIG $NODE -- "$@"
+}
+
+scp_() {
+    scp -F $SSH_CONFIG $1 $NODE:$2
+}
+
+
+# ------------------------------------------------------------------------------
+# trap on exit
+# ------------------------------------------------------------------------------
+function on_exit {
+    if [[ "$COMPLETED" != true ]]; then
+        cat <<EOF
+
+Something went wrong. The installation couldn't be completed!
+EOF
+        exit 1
+    else
+        cat <<EOF
+
+Completed successfully!
+EOF
+        exit 0
+    fi
+}
+
+COMPLETED=false
+trap on_exit EXIT
+
+if [[ -z "$NODE" ]]; then
+    cat <<EOF
+Usage:
+       add-jvb-node <NODE-ADDRESS>
+EOF
+    exit 1
+fi
+
+
+# ------------------------------------------------------------------------------
+# exports
+# ------------------------------------------------------------------------------
+JITSI_FQDN=$(cat $JITSI_ROOTFS/root/meta/jitsi-fqdn || true)
+JVB_SHARD_PASSWD=$(cat $JITSI_ROOTFS/root/meta/jvb-shard-passwd || true)
+JVB_VERSION=$(cat $JITSI_ROOTFS/root/meta/jvb-version || true)
+
+
+# ------------------------------------------------------------------------------
+# installation
+# ------------------------------------------------------------------------------
+ssh_ <<EOS
+set -e
+apt-get -y --allow-releaseinfo-change update
+apt-get -y install wget
+wget $INSTALLER -O /tmp/ni -T 30
+EOS
+
+ssh_ <<EOS
+set -e
+export APP_REPO=$APP_REPO
+export JITSI_FQDN=$JITSI_FQDN
+export JVB_VERSION=$JVB_VERSION
+export JVB_SHARD_PASSWD=$JVB_SHARD_PASSWD
+export DONT_RUN_HOST_CUSTOM_CA=true
+export APT_PROXY=$APT_PROXY
+export REINSTALL_BOOKWORM_IF_EXISTS=$REINSTALL_BOOKWORM_IF_EXISTS
+
+cd /tmp
+bash ni $APP
+EOS
+
+
+# ------------------------------------------------------------------------------
+# completed
+# ------------------------------------------------------------------------------
+COMPLETED=true

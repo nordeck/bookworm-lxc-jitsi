@@ -1,0 +1,153 @@
+#!/bin/bash
+set -e
+
+# ------------------------------------------------------------------------------
+# ADD-SIP-VM
+# ------------------------------------------------------------------------------
+# Add an additional video-sip-gateway node (without LXC) to the cluster.
+#
+# Usage:
+#     add-sip-vm <NODE-ADDRESS>
+# ------------------------------------------------------------------------------
+SSH_CONFIG="/root/.ssh/jms-config"
+
+APP="nordeck-sip-vm"
+APP_REPO="https://github.com/nordeck/bookworm-lxc-jitsi.git"
+NODE=$1
+
+JITSI_ROOTFS="/var/lib/lxc/nordeck-jitsi/rootfs"
+
+ssh_() {
+    ssh -F $SSH_CONFIG $NODE -- "$@"
+}
+
+scp_() {
+    scp -F $SSH_CONFIG $1 $NODE:$2
+}
+
+
+# ------------------------------------------------------------------------------
+# trap on exit
+# ------------------------------------------------------------------------------
+function on_exit {
+    if [[ "$COMPLETED" != true ]]; then
+        cat <<EOF
+
+Something went wrong. The installation couldn't be completed!
+EOF
+        exit 1
+    else
+        cat <<EOF
+
+Completed successfully!
+EOF
+        exit 0
+    fi
+}
+
+COMPLETED=false
+trap on_exit EXIT
+
+if [[ -z "$NODE" ]]; then
+    cat <<EOF
+Usage:
+       add-sip-vm <NODE-ADDRESS>
+EOF
+    exit 1
+fi
+
+
+# ------------------------------------------------------------------------------
+# exports
+# ------------------------------------------------------------------------------
+JITSI_FQDN=$(cat $JITSI_ROOTFS/root/meta/jitsi-fqdn || true)
+JIBRI_VERSION=$(cat $JITSI_ROOTFS/root/meta/jibri-version || true)
+JIBRI_PASSWD=$(cat $JITSI_ROOTFS/root/meta/jibri-passwd || true)
+JIBRI_SIP_PASSWD=$(cat $JITSI_ROOTFS/root/meta/jibri-sip-passwd || true)
+
+
+# ------------------------------------------------------------------------------
+# uploads
+# ------------------------------------------------------------------------------
+ssh_ "rm -rf /root/meta"
+ssh_ "mkdir /root/meta"
+
+ssh_ "rm -f /root/.ssh/jms-CA.crt"
+if [[ -f "$JITSI_ROOTFS/usr/local/share/ca-certificates/jms-CA.crt" ]]; then
+    scp_ $JITSI_ROOTFS/usr/local/share/ca-certificates/jms-CA.crt /root/.ssh/
+fi
+
+if [[ -f "$JITSI_ROOTFS/root/meta/pjsua.config.vm" ]]; then
+    scp_ $JITSI_ROOTFS/root/meta/pjsua.config.vm /root/meta/pjsua.config
+fi
+
+scp_ /root/nordeck-store/pjsua /root/meta/
+
+if [[ -f "/root/nordeck-store/jitsi-component-sidecar.deb" ]] && \
+   [[ "DONT_RUN_COMPONENT_SIDECAR" != false ]]; then
+    scp_ /root/nordeck-store/jitsi-component-sidecar.deb /root/meta/
+fi
+
+ssh_ "rm -f /root/.ssh/sidecar.key"
+if [[ -f /root/.ssh/sidecar.key ]] && \
+   [[ "DONT_RUN_COMPONENT_SIDECAR" != false ]]; then
+    scp_ /root/.ssh/sidecar.key /root/.ssh/
+fi
+
+ssh_ "rm -f /root/.ssh/sidecar.pem"
+if [[ -f /root/.ssh/sidecar.pem ]] && \
+   [[ "DONT_RUN_COMPONENT_SIDECAR" != false ]]; then
+    scp_ /root/.ssh/sidecar.pem /root/.ssh/
+fi
+
+if [[ -f "$JITSI_ROOTFS/root/meta/env.sidecar.sip" ]] && \
+   [[ "DONT_RUN_COMPONENT_SIDECAR" != false ]]; then
+    scp_ $JITSI_ROOTFS/root/meta/env.sidecar.sip /root/meta/env.sidecar
+fi
+
+
+# ------------------------------------------------------------------------------
+# installation
+# ------------------------------------------------------------------------------
+ssh_ <<EOS
+set -e
+apt-get -y --allow-releaseinfo-change update
+apt-get -y install git
+rm -rf /tmp/nordeck-repo
+git clone --depth=1 $APP_REPO /tmp/nordeck-repo
+EOS
+
+ssh_ <<EOS
+set -e
+export START_TIME=\$(date +%s)
+export TAG="nordeck"
+export INSTALLER="/tmp/nordeck-repo/installer-sub-scripts/$APP"
+export MACHINES="/tmp/nordeck-repo/machines"
+export JITSI_FQDN=$JITSI_FQDN
+export JIBRI_VERSION=$JIBRI_VERSION
+export JIBRI_PASSWD=$JIBRI_PASSWD
+export JIBRI_SIP_PASSWD=$JIBRI_SIP_PASSWD
+export RUN_REMOVE_BUILDER=$RUN_REMOVE_BUILDER
+export DONT_RUN_COMPONENT_SIDECAR=$DONT_RUN_COMPONENT_SIDECAR
+export APT_PROXY=$APT_PROXY
+
+cd \$INSTALLER
+[[ -f "init.sh" ]] && bash init.sh
+for sub in \$(ls *.sh | grep -v init.sh); do
+    bash \$sub
+done
+
+apt-get -y purge git
+apt-get -y autoremove --purge
+
+END_TIME=\$(date +%s)
+DURATION=\$(date -ud "0 \$END_TIME seconds - \$START_TIME seconds" +"%H:%M:%S")
+echo
+echo Installation Duration: \$DURATION
+EOS
+
+
+# ------------------------------------------------------------------------------
+# completed
+# ------------------------------------------------------------------------------
+COMPLETED=true
