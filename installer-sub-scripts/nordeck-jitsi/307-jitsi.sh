@@ -194,7 +194,7 @@ EOS
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 export DEBIAN_FRONTEND=noninteractive
-apt-get $APT_PROXY -y install luarocks liblua5.2-dev
+apt-get $APT_PROXY -y install luarocks liblua5.4-dev
 apt-get $APT_PROXY -y install gcc git
 EOS
 
