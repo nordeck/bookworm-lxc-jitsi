@@ -132,7 +132,7 @@ EOS
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 adduser dialplan --system --group --disabled-password --shell /bin/zsh \
-    --gecos ''
+    --home /home/dialplan
 EOS
 
 cp $MACHINE_COMMON/home/user/.tmux.conf $ROOTFS/home/dialplan/
