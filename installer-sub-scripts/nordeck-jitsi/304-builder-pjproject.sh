@@ -12,7 +12,7 @@ cd $MACHINES/$MACH
 
 ROOTFS="/var/lib/lxc/$MACH/rootfs"
 PROJECT_REPO="https://github.com/jitsi/pjproject"
-PROJECT_BRANCH="jibri-2.10-dev1"
+PROJECT_BRANCH="jibri-2.11-dev1"
 
 # ------------------------------------------------------------------------------
 # INIT
@@ -42,9 +42,12 @@ done
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 export DEBIAN_FRONTEND=noninteractive
+#apt-get $APT_PROXY -y install libv4l-dev libsdl2-dev libavcodec-dev \
+#    libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev \
+#    libswresample-dev libswscale-dev libasound2-dev libopus-dev libvpx-dev
 apt-get $APT_PROXY -y install libv4l-dev libsdl2-dev libavcodec-dev \
     libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev \
-    libswresample-dev libswscale-dev libasound2-dev libopus-dev libvpx-dev
+    libswscale-dev libasound2-dev libopus-dev libvpx-dev
 EOS
 
 # ------------------------------------------------------------------------------
