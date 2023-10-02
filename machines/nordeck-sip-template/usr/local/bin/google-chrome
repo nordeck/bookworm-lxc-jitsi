@@ -1,0 +1,12 @@
+#!/usr/bin/bash
+set -e
+
+ARGS=$@
+
+[[ "$(whoami)" != "jibri" ]] && exec /usr/bin/google-chrome $ARGS
+
+# push display :1 view to virtual camera 0
+sudo systemctl start virtual-camera-0
+sleep 0.8
+
+exec /usr/bin/google-chrome $ARGS --alsa-input-device=chrome_capture

@@ -1,0 +1,12 @@
+[Unit]
+Description=Jitsi Component Sidecar Config
+Wants=network-online.target
+After=network-online.target
+Before=jitsi-component-sidecar.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/jitsi-component-sidecar-config
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+set -e
+
+# public interface
+DEFAULT_ROUTE=$(ip route | egrep '^default ' | head -n1)
+[[ -z "$DEFAULT_ROUTE" ]] && exit 1
+
+PUBLIC_INTERFACE=${DEFAULT_ROUTE##*dev }
+PUBLIC_INTERFACE=${PUBLIC_INTERFACE/% */}
+[[ -z "$(ip addr show $PUBLIC_INTERFACE 2>/dev/null)" ]] && exit 1
+
+# IP address of the public interface
+PUBLIC_IP=$(ip addr show "$PUBLIC_INTERFACE" | egrep "$PUBLIC_INTERFACE$" | \
+    xargs | cut -d " " -f2 | cut -d "/" -f1)
+[[ -z "$PUBLIC_IP" ]] && exit 1
+
+# update INSTANCE_KEY in component-sidecar config
+sed -i '/^INSTANCE_KEY/d' /etc/jitsi/sidecar/env
+echo "INSTANCE_KEY=$PUBLIC_IP" >>/etc/jitsi/sidecar/env

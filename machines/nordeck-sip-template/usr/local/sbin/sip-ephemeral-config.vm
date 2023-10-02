@@ -1,0 +1,13 @@
+#!/usr/bin/bash
+
+# ------------------------------------------------------------------------------
+# SIP-EPHEMERAL-CONFIG
+# ------------------------------------------------------------------------------
+#
+# Customize the Jibri-SIP config for the current instance
+#
+# ------------------------------------------------------------------------------
+# set a unique nickname for SIP
+NICKNAME=$(uuidgen)
+
+sed -i "s/\(^\s*nickname\s*=\).*/\1 \"$NICKNAME\"/" /etc/jitsi/jibri/jibri.conf
