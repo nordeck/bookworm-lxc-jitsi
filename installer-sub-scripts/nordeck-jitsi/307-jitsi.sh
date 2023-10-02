@@ -159,7 +159,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get $APT_PROXY -y install gnupg
 apt-get $APT_PROXY -y install ngrep ncat jq
 apt-get $APT_PROXY -y install ruby-hocon
-apt-get $APT_PROXY -y install openjdk-17-jre
+apt-get $APT_PROXY -y install openjdk-17-jre-headless
 EOS
 
 # ssl packages
@@ -194,7 +194,6 @@ EOS
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 export DEBIAN_FRONTEND=noninteractive
-apt-get $APT_PROXY -y install luarocks liblua5.4-dev
 apt-get $APT_PROXY -y install gcc git
 EOS
 
@@ -392,13 +391,19 @@ sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" \
 ln -s ../conf.avail/sip.$JITSI_FQDN.cfg.lua \
     $ROOTFS/etc/prosody/conf.d/
 
+# guest
+cp etc/prosody/conf.avail/guest.cfg.lua \
+   $ROOTFS/etc/prosody/conf.avail/guest.$JITSI_FQDN.cfg.lua
+ln -s ../conf.avail/guest.$JITSI_FQDN.cfg.lua \
+    $ROOTFS/etc/prosody/conf.d/
+
 # lua modules
 cp usr/share/jitsi-meet/prosody-plugins/*.lua \
     $ROOTFS/usr/share/jitsi-meet/prosody-plugins/
 
 # token related
 sed -i '/\s*app_secret=/a \
-\    allow_empty_token = false \
+\    allow_empty_token = true \
 \    enable_domain_verification = false' \
     $PROSODY_CONFIG
 sed -i '/^Component .conference\./,/admins/!b; /\s*"token_verification"/a \
@@ -431,8 +436,17 @@ cat etc/jitsi/jicofo/config.custom >>$ROOTFS/etc/jitsi/jicofo/config
 
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
+hocon -f /etc/jitsi/jicofo/jicofo.conf set jicofo.authentication.enabled true
+hocon -f /etc/jitsi/jicofo/jicofo.conf set jicofo.authentication.type XMPP
+hocon -f /etc/jitsi/jicofo/jicofo.conf set jicofo.authentication.login-url \
+    "\"$JITSI_FQDN\""
+hocon -f /etc/jitsi/jicofo/jicofo.conf \
+    set jicofo.authentication.enable-auto-login false
+hocon -f /etc/jitsi/jicofo/jicofo.conf \
+    set jicofo.authentication.authentication-lifetime '1 second'
 hocon -f /etc/jitsi/jicofo/jicofo.conf \
     set jicofo.conference.enable-auto-owner false
+
 hocon -f /etc/jitsi/jicofo/jicofo.conf \
     set jicofo.jibri-sip.brewery-jid "\"SipBrewery@internal.auth.$JITSI_FQDN\""
 hocon -f /etc/jitsi/jicofo/jicofo.conf \

@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# COMPONENT-SELECTOR.SH
+# EXCALIDRAW.SH
 # ------------------------------------------------------------------------------
 set -e
 source $INSTALLER/000-source
@@ -7,19 +7,14 @@ source $INSTALLER/000-source
 # ------------------------------------------------------------------------------
 # ENVIRONMENT
 # ------------------------------------------------------------------------------
-MACH="$TAG-component-selector"
+MACH="$TAG-excalidraw"
 cd $MACHINES/$MACH
 
 ROOTFS="/var/lib/lxc/$MACH/rootfs"
 DNS_RECORD=$(grep "address=/$MACH/" /etc/dnsmasq.d/$TAG-jitsi | head -n1)
 IP=${DNS_RECORD##*/}
 SSH_PORT="30$(printf %03d ${IP##*.})"
-echo COMPONENT_SELECTOR="$IP" >> $INSTALLER/000-source
-
-JITSI_MACH="$TAG-jitsi"
-JITSI_ROOTFS="/var/lib/lxc/$JITSI_MACH/rootfs"
-
-KID_SIDECAR="jitsi/default"
+echo EXCALIDRAW="$IP" >> $INSTALLER/000-source
 
 # ------------------------------------------------------------------------------
 # NFTABLES RULES
@@ -33,7 +28,7 @@ nft add element $TAG-nat tcp2port { $SSH_PORT : 22 }
 # ------------------------------------------------------------------------------
 # INIT
 # ------------------------------------------------------------------------------
-[[ "$DONT_RUN_COMPONENT_SELECTOR" = true ]] && exit
+[[ "$DONT_RUN_EXCALIDRAW" = true ]] && exit
 
 echo
 echo "-------------------------- $MACH --------------------------"
@@ -113,8 +108,7 @@ EOS
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 export DEBIAN_FRONTEND=noninteractive
-apt-get $APT_PROXY -y install gnupg
-apt-get $APT_PROXY -y install redis
+apt-get $APT_PROXY -y install gnupg git
 EOS
 
 # nodejs
@@ -135,68 +129,35 @@ apt-get $APT_PROXY -y install nodejs
 npm install npm -g
 EOS
 
-# jitsi-component-selector
-cp /root/$TAG-store/jitsi-component-selector.deb $ROOTFS/tmp/
-
+# ------------------------------------------------------------------------------
+# EXCALIDRAW
+# ------------------------------------------------------------------------------
+# excalidraw user
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
-export DEBIAN_FRONTEND=noninteractive
-dpkg -i /tmp/jitsi-component-selector.deb
+adduser excalidraw --system --group --disabled-password --shell /usr/bin/bash \
+    --home /home/excalidraw
 EOS
 
-# ------------------------------------------------------------------------------
-# SYSTEM CONFIGURATION
-# ------------------------------------------------------------------------------
-echo -e "$JITSI\t$JITSI_FQDN" >> $ROOTFS/etc/hosts
-
-cp /root/$TAG-certs/$TAG-CA.pem \
-    $ROOTFS/usr/local/share/ca-certificates/jms-CA.crt
+# excalidraw-backend app
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
-export DEBIAN_FRONTEND=noninteractive
-update-ca-certificates
+su -l excalidraw <<EOSS
+    set -e
+    git clone https://github.com/jitsi/excalidraw-backend.git
+    cd excalidraw-backend
+    echo -n "PORT=3002" >.env.production
+
+    npm install
+    npm run build
+EOSS
 EOS
 
-# ------------------------------------------------------------------------------
-# ASAP KEY SERVER
-# ------------------------------------------------------------------------------
-rm -rf $JITSI_ROOTFS/var/www/asap
-cp -arp $MACHINES/$JITSI_MACH/var/www/asap $JITSI_ROOTFS/var/www/
-
-cp $MACHINES/$JITSI_MACH/etc/nginx/sites-available/asap.conf \
-    $JITSI_ROOTFS/etc/nginx/sites-available/
-sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" \
-    $JITSI_ROOTFS/etc/nginx/sites-available/asap.conf
-rm -f $JITSI_ROOTFS/etc/nginx/sites-enabled/asap.conf
-ln -s /etc/nginx/sites-available/asap.conf \
-    $JITSI_ROOTFS/etc/nginx/sites-enabled/
-
-lxc-attach -qn $JITSI_MACH -- true && \
-    lxc-attach -n $JITSI_MACH -- systemctl restart nginx.service
-
-# ------------------------------------------------------------------------------
-# SIDECAR KEYS
-# ------------------------------------------------------------------------------
-# create sidecar keys if not exist
-if [[ ! -f /root/.ssh/sidecar.key ]] || [[ ! -f /root/.ssh/sidecar.pem ]]; then
-    rm -f /root/.ssh/sidecar.{key,pem}
-
-    ssh-keygen -qP '' -t rsa -b 4096 -m PEM -f /root/.ssh/sidecar.key
-    openssl rsa -in /root/.ssh/sidecar.key -pubout -outform PEM \
-        -out /root/.ssh/sidecar.pem
-    rm -f /root/.ssh/sidecar.key.pub
-fi
-
-HASH=$(echo -n "$KID_SIDECAR" | sha256sum | awk '{print $1}')
-cp /root/.ssh/sidecar.pem $JITSI_ROOTFS/var/www/asap/server/$HASH.pem
-
-# ------------------------------------------------------------------------------
-# COMPONENT-SELECTOR
-# ------------------------------------------------------------------------------
-cp etc/jitsi/selector/env $ROOTFS/etc/jitsi/selector/
-sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" $ROOTFS/etc/jitsi/selector/env
-
-lxc-attach -n $MACH -- systemctl restart jitsi-component-selector.service
+# systemd unit
+cp etc/systemd/system/excalidraw.service $ROOTFS/etc/systemd/system/
+lxc-attach -n $MACH -- systemctl daemon-reload
+lxc-attach -n $MACH -- systemctl enable excalidraw.service
+lxc-attach -n $MACH -- systemctl start excalidraw.service
 
 # ------------------------------------------------------------------------------
 # CONTAINER SERVICES

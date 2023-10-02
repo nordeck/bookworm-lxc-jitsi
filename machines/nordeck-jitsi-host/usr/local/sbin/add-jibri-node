@@ -113,7 +113,9 @@ ssh_ <<EOS
 set -e
 apt-get -y --allow-releaseinfo-change update
 apt-get -y install wget
-wget $INSTALLER -O /tmp/ni -T 30
+
+rm -rf /tmp/ni-installer
+wget $INSTALLER -O /tmp/ni-installer -T 30
 EOS
 
 ssh_ <<EOS
@@ -129,7 +131,7 @@ export APT_PROXY=$APT_PROXY
 export REINSTALL_BOOKWORM_IF_EXISTS=$REINSTALL_BOOKWORM_IF_EXISTS
 
 cd /tmp
-bash ni $APP
+bash ni-installer $APP
 EOS
 
 

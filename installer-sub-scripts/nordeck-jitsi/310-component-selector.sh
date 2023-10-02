@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# DIALPLAN.SH
+# COMPONENT-SELECTOR.SH
 # ------------------------------------------------------------------------------
 set -e
 source $INSTALLER/000-source
@@ -7,14 +7,19 @@ source $INSTALLER/000-source
 # ------------------------------------------------------------------------------
 # ENVIRONMENT
 # ------------------------------------------------------------------------------
-MACH="$TAG-dialplan"
+MACH="$TAG-component-selector"
 cd $MACHINES/$MACH
 
 ROOTFS="/var/lib/lxc/$MACH/rootfs"
 DNS_RECORD=$(grep "address=/$MACH/" /etc/dnsmasq.d/$TAG-jitsi | head -n1)
 IP=${DNS_RECORD##*/}
 SSH_PORT="30$(printf %03d ${IP##*.})"
-echo DIALPLAN="$IP" >> $INSTALLER/000-source
+echo COMPONENT_SELECTOR="$IP" >> $INSTALLER/000-source
+
+JITSI_MACH="$TAG-jitsi"
+JITSI_ROOTFS="/var/lib/lxc/$JITSI_MACH/rootfs"
+
+KID_SIDECAR="jitsi/default"
 
 # ------------------------------------------------------------------------------
 # NFTABLES RULES
@@ -28,7 +33,7 @@ nft add element $TAG-nat tcp2port { $SSH_PORT : 22 }
 # ------------------------------------------------------------------------------
 # INIT
 # ------------------------------------------------------------------------------
-[[ "$DONT_RUN_DIALPLAN" = true ]] && exit
+[[ "$DONT_RUN_COMPONENT_SELECTOR" = true ]] && exit
 
 echo
 echo "-------------------------- $MACH --------------------------"
@@ -108,67 +113,90 @@ EOS
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
 export DEBIAN_FRONTEND=noninteractive
-apt-get $APT_PROXY -y install unzip git
+apt-get $APT_PROXY -y install gnupg
+apt-get $APT_PROXY -y install redis
+EOS
+
+# nodejs
+cp etc/apt/sources.list.d/nodesource.list $ROOTFS/etc/apt/sources.list.d/
+
+lxc-attach -n $MACH -- zsh <<EOS
+set -e
+wget -T 30 -qO /tmp/nodesource.gpg.key \
+    https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+cat /tmp/nodesource.gpg.key | gpg --dearmor >/usr/share/keyrings/nodesource.gpg
+apt-get $APT_PROXY update
+EOS
+
+lxc-attach -n $MACH -- zsh <<EOS
+set -e
+export DEBIAN_FRONTEND=noninteractive
+apt-get $APT_PROXY -y install nodejs
+npm install npm -g
+EOS
+
+# jitsi-component-selector
+cp /root/$TAG-store/jitsi-component-selector.deb $ROOTFS/tmp/
+
+lxc-attach -n $MACH -- zsh <<EOS
+set -e
+export DEBIAN_FRONTEND=noninteractive
+dpkg -i /tmp/jitsi-component-selector.deb
 EOS
 
 # ------------------------------------------------------------------------------
 # SYSTEM CONFIGURATION
 # ------------------------------------------------------------------------------
-# deno
+echo -e "$JITSI\t$JITSI_FQDN" >> $ROOTFS/etc/hosts
+
+cp /root/$TAG-certs/$TAG-CA.pem \
+    $ROOTFS/usr/local/share/ca-certificates/jms-CA.crt
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
-cd /tmp
-wget -T 30 -O deno.zip \
-    https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip
-unzip -o deno.zip
-cp /tmp/deno /usr/local/bin/
-deno --version
+export DEBIAN_FRONTEND=noninteractive
+update-ca-certificates
 EOS
 
 # ------------------------------------------------------------------------------
-# DIALPLAN
+# ASAP KEY SERVER
 # ------------------------------------------------------------------------------
-# dialplan user
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-adduser dialplan --system --group --disabled-password --shell /bin/zsh \
-    --home /home/dialplan
-EOS
+rm -rf $JITSI_ROOTFS/var/www/asap
+cp -arp $MACHINES/$JITSI_MACH/var/www/asap $JITSI_ROOTFS/var/www/
 
-cp $MACHINE_COMMON/home/user/.tmux.conf $ROOTFS/home/dialplan/
-cp $MACHINE_COMMON/home/user/.zshrc $ROOTFS/home/dialplan/
-cp $MACHINE_COMMON/home/user/.vimrc $ROOTFS/home/dialplan/
+cp $MACHINES/$JITSI_MACH/etc/nginx/sites-available/asap.conf \
+    $JITSI_ROOTFS/etc/nginx/sites-available/
+sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" \
+    $JITSI_ROOTFS/etc/nginx/sites-available/asap.conf
+rm -f $JITSI_ROOTFS/etc/nginx/sites-enabled/asap.conf
+ln -s /etc/nginx/sites-available/asap.conf \
+    $JITSI_ROOTFS/etc/nginx/sites-enabled/
 
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-chown dialplan:dialplan /home/dialplan/.tmux.conf
-chown dialplan:dialplan /home/dialplan/.vimrc
-chown dialplan:dialplan /home/dialplan/.zshrc
-EOS
+lxc-attach -qn $JITSI_MACH -- true && \
+    lxc-attach -n $JITSI_MACH -- systemctl restart nginx.service
 
-# application
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-su -l dialplan <<EOSS
-    set -e
-    git clone https://github.com/jitsi-contrib/sip-dial-plan.git app
-EOSS
-EOS
+# ------------------------------------------------------------------------------
+# SIDECAR KEYS
+# ------------------------------------------------------------------------------
+# create sidecar keys if not exist
+if [[ ! -f /root/.ssh/sidecar.key ]] || [[ ! -f /root/.ssh/sidecar.pem ]]; then
+    rm -f /root/.ssh/sidecar.{key,pem}
 
-sed -i "/HOSTNAME/ s~\".*\"~\"0.0.0.0\"~" \
-    $ROOTFS/home/dialplan/app/config.ts
-sed -i "/TOKEN_SECRET/ s~\".*\"~\"$APP_SECRET\"~" \
-    $ROOTFS/home/dialplan/app/config.ts
+    ssh-keygen -qP '' -t rsa -b 4096 -m PEM -f /root/.ssh/sidecar.key
+    openssl rsa -in /root/.ssh/sidecar.key -pubout -outform PEM \
+        -out /root/.ssh/sidecar.pem
+    rm -f /root/.ssh/sidecar.key.pub
+fi
 
-# systemd
-cp etc/systemd/system/dialplan.service $ROOTFS/etc/systemd/system/
+HASH=$(echo -n "$KID_SIDECAR" | sha256sum | awk '{print $1}')
+cp /root/.ssh/sidecar.pem $JITSI_ROOTFS/var/www/asap/server/$HASH.pem
 
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-systemctl daemon-reload
-systemctl enable dialplan.service
-systemctl start dialplan.service
-EOS
+# ------------------------------------------------------------------------------
+# COMPONENT-SELECTOR
+# ------------------------------------------------------------------------------
+cp etc/jitsi/selector/env $ROOTFS/etc/jitsi/selector/
+sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" $ROOTFS/etc/jitsi/selector/env
+
+lxc-attach -n $MACH -- systemctl restart jitsi-component-selector.service
 
 # ------------------------------------------------------------------------------
 # CONTAINER SERVICES
