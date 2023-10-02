@@ -187,6 +187,7 @@ debconf-set-selections <<< \
     'jitsi-meet-web-config jitsi-meet/cert-choice select Generate a new self-signed certificate'
 
 apt-get $APT_PROXY -y --install-recommends install jitsi-meet
+apt-get $APT_PROXY -y --install-recommends install libnginx-mod-stream
 apt-mark hold 'jitsi-*' jicofo
 EOS
 
