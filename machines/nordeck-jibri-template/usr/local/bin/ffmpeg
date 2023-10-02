@@ -1,0 +1,17 @@
+#!/usr/bin/bash
+
+ARGS=$@
+
+[[ "$(whoami)" != "jibri" ]] && exec /usr/bin/ffmpeg $ARGS
+
+DEST=$(echo $ARGS | rev | cut -d' ' -f1 | rev)
+FMT=$(echo $ARGS | rev | cut -d' ' -f2 | rev)
+if [[ "$FMT" = "mp4" ]]; then
+    SID=$(echo $ARGS | rev | cut -d '/' -f2 | rev)
+    ROOM=$(echo $ARGS | rev | cut -d '/' -f1 | cut -d '_' -f2 | rev)
+elif [[ "$FMT" = "flv" ]]; then
+    SCHEME=$(echo $DEST | cut -d ':' -f1)
+fi
+
+echo $ARGS >> /tmp/ffmpeg.log
+exec /usr/bin/ffmpeg $ARGS
