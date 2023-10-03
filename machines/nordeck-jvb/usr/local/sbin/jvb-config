@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+sed -i "/^org.jitsi.videobridge.xmpp.user.shard.MUC_NICKNAME=/ \
+     s/=.*/=$(uuidgen)/" /etc/jitsi/videobridge/sip-communicator.properties
+
+EXTERNAL_IP=$(curl -s ifconfig.me || true)
+if [[ -n "$EXTERNAL_IP" ]]; then
+    hocon -f /etc/jitsi/videobridge/jvb.conf \
+        set videobridge.websockets.server-id "\"$EXTERNAL_IP\""
+fi
