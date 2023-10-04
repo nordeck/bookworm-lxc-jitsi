@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+# ------------------------------------------------------------------------------
+# SIP-EPHEMERAL-STOP
+# ------------------------------------------------------------------------------
+#
+# Stop the ephemeral SIP containers.
+#
+# ------------------------------------------------------------------------------
+lxc-autostart -s -g nordeck-sip -t 30
+lxc-autostart -k -g nordeck-sip
+
+for i in $(seq 10); do
+    sleep 1
+    [[ -z "$(lxc-ls -1g nordeck-sip | grep -v nordeck-sip-template)" ]] && exit 0
+done
