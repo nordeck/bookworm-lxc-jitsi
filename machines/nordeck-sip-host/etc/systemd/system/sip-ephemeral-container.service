@@ -1,0 +1,15 @@
+[Unit]
+Description=SIP Ephemeral Container
+Requires=lxc.service
+After=lxc.service
+
+[Service]
+User=root
+Group=root
+ExecStartPre=bash -c "rm -rf /var/lib/lxc/nordeck-sip-*-*"
+ExecStart=/usr/local/sbin/sip-ephemeral-start
+ExecStop=/usr/local/sbin/sip-ephemeral-stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
