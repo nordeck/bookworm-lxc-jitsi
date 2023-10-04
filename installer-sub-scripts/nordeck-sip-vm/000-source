@@ -1,0 +1,10 @@
+# ------------------------------------------------------------------------------
+# SOURCE
+# ------------------------------------------------------------------------------
+# This script is shared by installer sub scripts to set/get the global
+# variables. Add the following line to the sub scripts to import this file:
+#
+#   source $INSTALLER/000-source
+#
+# ------------------------------------------------------------------------------
+set -e
