@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-unclutter &
+unclutter -root -idle 0.1 &
 
 #[[ "$DISPLAY" = ":0" ]] && \
 #    x11vnc -display :0 -rfbport 5900 -nolookup -once -loop -usepw -shared \
