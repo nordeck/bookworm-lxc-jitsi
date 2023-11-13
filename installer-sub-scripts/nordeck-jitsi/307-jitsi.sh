@@ -172,6 +172,8 @@ apt-get $APT_PROXY -y install ssl-cert certbot
 EOS
 
 # prosody
+# prosody from the official Debian repo depends on Lua5.4 and this breaks
+# jitsi-meet-tokens
 cp etc/apt/sources.list.d/prosody.list $ROOTFS/etc/apt/sources.list.d/
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
