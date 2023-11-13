@@ -170,6 +170,16 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get $APT_PROXY -y install ssl-cert certbot
 EOS
 
+# prosody
+cp etc/apt/sources.list.d/prosody.list $ROOTFS/etc/apt/sources.list.d/
+lxc-attach -n $MACH -- zsh <<EOS
+set -e
+wget -T 10 -qO /tmp/prosody.gpg.key \
+    https://prosody.im/files/prosody-debian-packages.key
+cat /tmp/prosody.gpg.key | gpg --dearmor >/usr/share/keyrings/prosody.gpg
+apt-get update
+EOS
+
 # jitsi
 cp etc/apt/sources.list.d/jitsi-stable.list $ROOTFS/etc/apt/sources.list.d/
 lxc-attach -n $MACH -- zsh <<EOS
