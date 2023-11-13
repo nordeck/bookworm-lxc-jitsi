@@ -161,6 +161,7 @@ apt-get $APT_PROXY -y install gnupg
 apt-get $APT_PROXY -y install ngrep jq
 apt-get $APT_PROXY -y install ruby-hocon
 apt-get $APT_PROXY -y install openjdk-17-jre-headless
+apt-get $APT_PROXY -y install lua5.3
 EOS
 
 # ssl packages
