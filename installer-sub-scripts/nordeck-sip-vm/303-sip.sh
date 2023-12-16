@@ -110,9 +110,9 @@ cp /opt/jitsi/jibri/finalize_sip.sh /opt/jitsi/jibri/finalize_sip.sh.org
 cp /home/jibri/.asoundrc /home/jibri/.asoundrc.org
 
 # resolution 1280x720
-sed -ri 's/^(\s*)Virtual 1920/\1#Virtual 1920/' \
+sed -ri 's/^(\s*)Modes "1920/\1#Modes "1920/' \
     /etc/jitsi/jibri/xorg-video-dummy.conf
-sed -ri 's/^(\s*)#Virtual 1280/\1Virtual 1280/' \
+sed -ri 's/^(\s*)#Modes "1280/\1Modes "1280/' \
     /etc/jitsi/jibri/xorg-video-dummy.conf
 
 # xorg DISPLAY :1
