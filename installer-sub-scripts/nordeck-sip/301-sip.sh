@@ -228,9 +228,9 @@ cp $ROOTFS/home/jibri/.asoundrc $ROOTFS/home/jibri/.asoundrc.org
 # resolution 1280x720
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
-sed -ri "s/^(\s*)Virtual 1920/\1#Virtual 1920/" \
+sed -ri 's/^(\s*)Modes "1920/\1#Modes "1920/' \
     /etc/jitsi/jibri/xorg-video-dummy.conf
-sed -ri "s/^(\s*)#Virtual 1280/\1Virtual 1280/" \
+sed -ri 's/^(\s*)#Modes "1280/\1Modes "1280/' \
     /etc/jitsi/jibri/xorg-video-dummy.conf
 EOS
 
