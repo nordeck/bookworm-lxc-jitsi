@@ -209,7 +209,7 @@ fi
 
 # pjsua scripts
 cp opt/jitsi/jibri/pjsua.sh /opt/jitsi/jibri/pjsua.sh
-cp opt/jitsi/jibri/finalize_sip.sh /opt/jitsi/jibri/finalize_sip.sh
+cp opt/jitsi/jibri/finalize_sip.sh.vm /opt/jitsi/jibri/finalize_sip.sh
 
 # fake google-chrome
 cp usr/local/bin/google-chrome /usr/local/bin/
