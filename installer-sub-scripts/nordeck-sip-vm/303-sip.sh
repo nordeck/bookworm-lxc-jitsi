@@ -96,7 +96,7 @@ cp etc/opt/chrome/policies/managed/$TAG-policies.json \
     /etc/opt/chrome/policies/managed/
 
 # sudo
-cp etc/sudoers.d/jibri /etc/sudoers.d/
+cp etc/sudoers.d/jibri.vm /etc/sudoers.d/jibri
 chmod 440 /etc/sudoers.d/jibri
 
 # ------------------------------------------------------------------------------
