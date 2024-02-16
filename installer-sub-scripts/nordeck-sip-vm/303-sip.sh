@@ -188,8 +188,10 @@ chown jibri:jibri /home/jibri/.Xdefaults
 # ------------------------------------------------------------------------------
 # VIRTUAL CAMERAS
 # ------------------------------------------------------------------------------
-cp etc/systemd/system/virtual-camera-0.service /etc/systemd/system/
-cp etc/systemd/system/virtual-camera-1.service /etc/systemd/system/
+cp etc/systemd/system/virtual-camera-0.service.vm \
+    /etc/systemd/system/virtual-camera-0.service
+cp etc/systemd/system/virtual-camera-1.service.vm \
+    /etc/systemd/system/virtual-camera-1.service
 systemctl daemon-reload
 
 # ------------------------------------------------------------------------------
