@@ -1,11 +1,44 @@
-There are some blockers. So it doesn't work for now.
+# Jitsi Cluster
 
-- `Jitsi` needs `openjdk-11-jre` but `Debian 12 Bookworm` provides
-  `openjdk-17-jre`.
+![Jitsi Cluster](/docs/images/jitsi-cluster.png)
 
-- Jitsi Team's version of [pjproject](https://github.com/jitsi/pjproject) is not
-  buildable on `Debian 12 Bookworm`. Both `jibri-2.10-dev1` and
-  `jibri-2.11-dev1` branches are tested but no success...
+`LXC` based `Jitsi` cluster on `Debian 12 Bookworm`.
 
-- There is an issue while creating an ephemeral LXC container by using
-  `lxc-copy -e`. The ephemeral container doesn't start after copying.
+## Installation
+
+See [the deployment guide](/INSTALL.md).
+
+## Why
+
+Deploying a `Jitsi` cluster is a complex task and requires a lot of specific
+configurations on each component to function properly. This repository contains
+tools that simplify the deployment processes and automatically configure each
+component without any user interaction.
+
+## Features
+
+- `JMS` node is the core of the cluster.
+
+- Allow to add as many `JVBs` as needed to scale up the number of participants
+  and meetings.
+
+- Allow to add as many `Jibris` as needed to increase the number of concurrent
+  recordings.
+
+- Allow to add as many `video-sip-gateway` as needed to allow the video-SIP
+  participants.
+
+- Built-in `component-selector` to manage `jibri` and `video-sip-gateway` nodes
+  programmatically. See
+  [component-selector-api-examples](/docs/component-selector-api-examples)
+  folder for more details.
+
+- Built-in `dial-plan` service to provide `SIP` contact list for `Jitsi` UI.
+
+- `JWT` authentication and `guest` domain are enabled and configured by default.
+
+- `Whiteboard` (_based on Excalidraw_) is enabled and configured by default.
+
+## Sponsors
+
+[![Nordeck](/docs/images/nordeck.png)](https://nordeck.net/)
