@@ -409,6 +409,10 @@ sed -i "s/___JITSI_FQDN___/$JITSI_FQDN/" \
 ln -s ../conf.avail/sip.$JITSI_FQDN.cfg.lua \
     $ROOTFS/etc/prosody/conf.d/
 
+sed -i "/muc_password_whitelist =/a \
+\        \"sip@sip.$JITSI_FQDN\"," \
+     $ROOTFS/etc/prosody/conf.avail/$JITSI_FQDN.cfg.lua
+
 # guest
 cp etc/prosody/conf.avail/guest.cfg.lua \
    $ROOTFS/etc/prosody/conf.avail/guest.$JITSI_FQDN.cfg.lua
