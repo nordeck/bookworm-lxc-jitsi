@@ -259,6 +259,7 @@ EOS
 
 # jibri, icewm
 mkdir -p $ROOTFS/home/jibri/.icewm
+cp home/jibri/.icewm/ringing.png $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/theme $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/prefoverride $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/startup $ROOTFS/home/jibri/.icewm/

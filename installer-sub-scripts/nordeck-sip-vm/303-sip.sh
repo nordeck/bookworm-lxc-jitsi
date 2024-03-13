@@ -129,6 +129,7 @@ chown jibri:jibri /home/jibri
 
 # jibri, icewm
 mkdir -p /home/jibri/.icewm
+cp home/jibri/.icewm/ringing.png /home/jibri/.icewm/
 cp home/jibri/.icewm/theme /home/jibri/.icewm/
 cp home/jibri/.icewm/prefoverride /home/jibri/.icewm/
 cp home/jibri/.icewm/startup /home/jibri/.icewm/
