@@ -1,1 +1,4 @@
-../../../../nordeck-jibri-template/home/jibri/.icewm/prefoverride
+DesktopBackgroundImage="/home/jibri/.icewm/ringing.png"
+DesktopBackgroundColor="#3a6ea5"
+DesktopBackgroundCenter=1
+DesktopBackgroundScaled=0
