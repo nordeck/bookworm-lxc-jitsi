@@ -44,7 +44,7 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 apt-get $APT_PROXY -y install libv4l-dev libsdl2-dev libavcodec-dev \
     libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev \
-    libswscale-dev libasound2-dev libopus-dev libvpx-dev
+    libswscale-dev libasound2-dev libopus-dev libvpx-dev libssl-dev
 EOS
 
 # ------------------------------------------------------------------------------
