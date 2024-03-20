@@ -2,4 +2,12 @@
 
 unclutter -root -idle 0.1 &
 
+DOMAIN=$(grep 'xmpp-domain' /etc/jitsi/jibri/jibri.conf | cut -d'"' -f2)
+if [[ -n "$DOMAIN" ]]; then
+    FQDN="https://$DOMAIN"
+else
+    FQDN="about:blank"
+fi
+timeout 8 /usr/bin/chromium --ignore-certificate-errors $FQDN &
+
 #x11vnc -display :0 -nolookup -once -loop -usepw -shared -noxdamage -nodpms &
