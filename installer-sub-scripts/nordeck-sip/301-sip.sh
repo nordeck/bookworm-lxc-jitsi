@@ -218,9 +218,9 @@ EOS
 
 # jibri, icewm
 mkdir -p $ROOTFS/home/jibri/.icewm
-cp home/jibri/.icewm/ringing.png $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/theme $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/prefoverride $ROOTFS/home/jibri/.icewm/
+cp home/jibri/.icewm/ringing.png $ROOTFS/home/jibri/.icewm/
 cp home/jibri/.icewm/startup $ROOTFS/home/jibri/.icewm/
 chmod 755 $ROOTFS/home/jibri/.icewm/startup
 
@@ -314,9 +314,12 @@ fi
 cp opt/jitsi/jibri/pjsua.sh $ROOTFS/opt/jitsi/jibri/pjsua.sh
 cp opt/jitsi/jibri/finalize_sip.sh $ROOTFS/opt/jitsi/jibri/finalize_sip.sh
 
-# fake google-chrome
-cp usr/local/bin/google-chrome $ROOTFS/usr/local/bin/
-chmod 755 $ROOTFS/usr/local/bin/google-chrome
+# fake chromedriver
+cp usr/local/bin/chromedriver $ROOTFS/usr/local/bin/
+chmod 755 $ROOTFS/usr/local/bin/chromedriver
+
+# the capture device for chromium
+cp etc/chromium.d/alsa-capture $ROOTFS/etc/chromium.d/
 
 # ------------------------------------------------------------------------------
 # CONTAINER SERVICES

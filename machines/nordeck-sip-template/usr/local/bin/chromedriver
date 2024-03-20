@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[[ "$(whoami)" = "jibri" ]] && sudo systemctl start virtual-camera-0
+
+exec /usr/bin/chromedriver "$@"

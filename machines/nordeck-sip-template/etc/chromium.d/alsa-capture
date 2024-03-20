@@ -1,0 +1,3 @@
+# overwrite the alsa capture device set by jibri for chromium
+# we dont want the hardcoded value --alsa-input-device=plughw:1,1
+set -- "${@}" "--alsa-input-device=chrome_capture"
