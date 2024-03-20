@@ -114,7 +114,11 @@ set -e
 apt-get -y --allow-releaseinfo-change update
 apt-get -y install git
 rm -rf /tmp/nordeck-repo
-git clone --depth=1 $APP_REPO /tmp/nordeck-repo
+if [[ -z "$APP_BRANCH" ]]; then
+    git clone --depth=1 $APP_REPO /tmp/nordeck-repo
+else
+    git clone --depth=1 -b $APP_BRANCH $APP_REPO /tmp/nordeck-repo
+fi
 EOS
 
 ssh_ <<EOS
