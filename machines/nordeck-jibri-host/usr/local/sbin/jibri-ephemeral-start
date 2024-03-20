@@ -42,7 +42,5 @@ for c in $(seq $CPI $CPI $N); do
 
     sleep 1
 
-    lxc-copy -n nordeck-jibri-template -N nordeck-jibri-$TAG-$ID -e -D -B overlay
-    echo "lxc.ephemeral = 1" >> /var/lib/lxc/nordeck-jibri-$TAG-$ID/config
-    lxc-start -n nordeck-jibri-$TAG-$ID
+    lxc-copy -n nordeck-jibri-template -N nordeck-jibri-$TAG-$ID -e
 done
