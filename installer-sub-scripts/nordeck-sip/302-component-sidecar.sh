@@ -126,6 +126,7 @@ lxc-wait -n $MACH -s STOPPED
 # CLEAN UP
 # ------------------------------------------------------------------------------
 find $ROOTFS/var/log/jitsi -type f -delete
+rm -rf $ROOTFS/home/jibri/.config/chromium
 
 # ------------------------------------------------------------------------------
 # ON HOST

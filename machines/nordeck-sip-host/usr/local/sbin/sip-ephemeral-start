@@ -46,9 +46,7 @@ for c in $(seq $CPI $CPI $N); do
 
     sleep 1
 
-    lxc-copy -n nordeck-sip-template -N nordeck-sip-$TAG-$ID -e -D -B overlay \
+    lxc-copy -n nordeck-sip-template -N nordeck-sip-$TAG-$ID -e \
         -m bind=/dev/video$VID0:/dev/video0:rw \
         -m bind=/dev/video$VID1:/dev/video1:rw
-    echo "lxc.ephemeral = 1" >> /var/lib/lxc/nordeck-sip-$TAG-$ID/config
-    lxc-start -n nordeck-sip-$TAG-$ID
 done

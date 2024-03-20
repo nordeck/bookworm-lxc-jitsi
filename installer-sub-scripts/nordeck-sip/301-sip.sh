@@ -115,47 +115,7 @@ apt-get $APT_PROXY -y install openjdk-17-jre-headless
 apt-get $APT_PROXY -y --install-recommends install ffmpeg
 apt-get $APT_PROXY -y install x11vnc
 apt-get $APT_PROXY -y install sudo
-EOS
-
-# google chrome
-cp etc/apt/sources.list.d/google-chrome.list $ROOTFS/etc/apt/sources.list.d/
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-wget -T 30 -qO /tmp/google-chrome.gpg.key \
-    https://dl.google.com/linux/linux_signing_key.pub
-cat /tmp/google-chrome.gpg.key | gpg --dearmor \
-    >/usr/share/keyrings/google-chrome.gpg
-apt-get $APT_PROXY update
-EOS
-
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-export DEBIAN_FRONTEND=noninteractive
-apt-get $APT_PROXY -y --install-recommends install google-chrome-stable
-apt-mark hold google-chrome-stable
-EOS
-
-# fix overwritten google-chrome sources list by recopying it
-# google tries to add its key as a globally trusted one, limit its permissions
-cp etc/apt/sources.list.d/google-chrome.list $ROOTFS/etc/apt/sources.list.d/
-
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-rm -f /etc/apt/trusted.gpg.d/google-chrome.*
-apt-get $APT_PROXY update
-EOS
-
-# chromedriver
-lxc-attach -n $MACH -- zsh <<EOS
-set -e
-CHROME_VER=\$(dpkg -s google-chrome-stable | egrep "^Version" | \
-    cut -d " " -f2 | cut -d "-" -f1)
-CHROME_STORE="https://storage.googleapis.com/chrome-for-testing-public"
-CHROMEDRIVER="\$CHROME_STORE/\${CHROME_VER}/linux64/chromedriver-linux64.zip"
-wget -T 30 -qO /tmp/chromedriver-linux64.zip \$CHROMEDRIVER
-unzip -o /tmp/chromedriver-linux64.zip -d /tmp
-mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/
-chmod 755 /usr/local/bin/chromedriver
+apt-get $APT_PROXY -y install chromium chromium-driver chromium-sandbox
 EOS
 
 # pjsua related
@@ -202,10 +162,9 @@ systemctl stop ssh.service
 systemctl disable ssh.service
 EOS
 
-# google chrome managed policies
-mkdir -p $ROOTFS/etc/opt/chrome/policies/managed
-cp etc/opt/chrome/policies/managed/$TAG-policies.json \
-    $ROOTFS/etc/opt/chrome/policies/managed/
+# chromium managed policies
+mkdir -p $ROOTFS/etc/chromium/policies/managed
+cp etc/chromium/policies/managed/*.json $ROOTFS/etc/chromium/policies/managed/
 
 # sudo
 cp etc/sudoers.d/jibri $ROOTFS/etc/sudoers.d/
@@ -311,8 +270,9 @@ EOS
 # jibri service
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
+sed -i '/google-chrome/d' /etc/systemd/system/jibri.service
+systemctl daemon-reload
 systemctl enable jibri.service
-systemctl start jibri.service
 EOS
 
 # jibri, vnc
@@ -369,6 +329,7 @@ lxc-wait -n $MACH -s STOPPED
 # CLEAN UP
 # ------------------------------------------------------------------------------
 find $ROOTFS/var/log/jitsi -type f -delete
+rm -rf $ROOTFS/home/jibri/.config/chromium
 
 # ------------------------------------------------------------------------------
 # ON HOST
