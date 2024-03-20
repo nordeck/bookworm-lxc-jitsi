@@ -36,35 +36,7 @@ apt-get $APT_PROXY -y install openjdk-17-jre-headless
 apt-get $APT_PROXY -y --install-recommends install ffmpeg
 apt-get $APT_PROXY -y install x11vnc
 apt-get $APT_PROXY -y install sudo
-
-# google chrome
-cp etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/
-wget -T 30 -qO /tmp/google-chrome.gpg.key \
-    https://dl.google.com/linux/linux_signing_key.pub
-cat /tmp/google-chrome.gpg.key | gpg --dearmor \
-    >/usr/share/keyrings/google-chrome.gpg
-
-apt-get $APT_PROXY update
-apt-get $APT_PROXY -y --install-recommends install google-chrome-stable
-apt-mark hold google-chrome-stable
-
-# fix overwritten google-chrome sources list by recopying it
-# google tries to add its key as a globally trusted one, limit its permissions
-cp etc/apt/sources.list.d/google-chrome.list /etc/apt/sources.list.d/
-rm -f /etc/apt/trusted.gpg.d/google-chrome.*
-apt-get $APT_PROXY update
-
-# chromedriver
-CHROME_VER=$(dpkg -s google-chrome-stable | egrep "^Version" | \
-    cut -d " " -f2 | cut -d "-" -f1)
-CHROME_STORE="https://storage.googleapis.com/chrome-for-testing-public"
-CHROMEDRIVER="$CHROME_STORE/${CHROME_VER}/linux64/chromedriver-linux64.zip"
-wget -T 30 -qO /tmp/chromedriver-linux64.zip $CHROMEDRIVER
-
-rm -rf /tmp/chromedriver-linux64
-unzip -o /tmp/chromedriver-linux64.zip -d /tmp
-mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/
-chmod 755 /usr/local/bin/chromedriver
+apt-get $APT_PROXY -y install chromium chromium-driver chromium-sandbox
 
 # pjsua related
 apt-get $APT_PROXY -y install libv4l-0
@@ -87,10 +59,9 @@ apt-get -y purge upower
 # ------------------------------------------------------------------------------
 # SYSTEM CONFIGURATION
 # ------------------------------------------------------------------------------
-# google chrome managed policies
-mkdir -p /etc/opt/chrome/policies/managed
-cp etc/opt/chrome/policies/managed/$TAG-policies.json \
-    /etc/opt/chrome/policies/managed/
+# chromium managed policies
+mkdir -p /etc/chromium/policies/managed
+cp etc/chromium/policies/managed/*.json /etc/chromium/policies/managed
 
 # sudo
 cp etc/sudoers.d/jibri.vm /etc/sudoers.d/jibri
@@ -129,9 +100,9 @@ chown jibri:jibri /home/jibri
 
 # jibri, icewm
 mkdir -p /home/jibri/.icewm
-cp home/jibri/.icewm/ringing.png /home/jibri/.icewm/
 cp home/jibri/.icewm/theme /home/jibri/.icewm/
 cp home/jibri/.icewm/prefoverride /home/jibri/.icewm/
+cp home/jibri/.icewm/ringing.png /home/jibri/.icewm/
 cp home/jibri/.icewm/startup /home/jibri/.icewm/
 chmod 755 /home/jibri/.icewm/startup
 
@@ -171,8 +142,9 @@ systemctl daemon-reload
 systemctl enable sip-ephemeral-config.service
 
 # jibri service
+sed -i '/google-chrome/d' /etc/systemd/system/jibri.service
+systemctl daemon-reload
 systemctl enable jibri.service
-systemctl start jibri.service
 
 # jibri, vnc
 mkdir -p /home/jibri/.vnc
@@ -209,9 +181,12 @@ fi
 cp opt/jitsi/jibri/pjsua.sh /opt/jitsi/jibri/pjsua.sh
 cp opt/jitsi/jibri/finalize_sip.sh.vm /opt/jitsi/jibri/finalize_sip.sh
 
-# fake google-chrome
-cp usr/local/bin/google-chrome /usr/local/bin/
-chmod 755 /usr/local/bin/google-chrome
+# fake chromedriver
+cp usr/local/bin/chromedriver /usr/local/bin/
+chmod 755 /usr/local/bin/chromedriver
+
+# the capture device for chromium
+cp etc/chromium.d/alsa-capture /etc/chromium.d/
 
 # ------------------------------------------------------------------------------
 # SERVICES
@@ -220,6 +195,7 @@ systemctl stop sip-xorg.service
 systemctl stop jibri-xorg.service
 
 find /var/log/jitsi -type f -delete
+rm -rf /home/jibri/.config/chromium
 
 systemctl start sip-ephemeral-config.service
 systemctl start jibri.service
