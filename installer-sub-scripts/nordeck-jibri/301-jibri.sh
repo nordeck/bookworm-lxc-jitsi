@@ -254,7 +254,6 @@ set -e
 sed -i '/google-chrome/d' /etc/systemd/system/jibri.service
 systemctl daemon-reload
 systemctl enable jibri.service
-systemctl start jibri.service
 EOS
 
 # jibri, vnc
@@ -283,6 +282,7 @@ lxc-wait -n $MACH -s STOPPED
 # CLEAN UP
 # ------------------------------------------------------------------------------
 find $ROOTFS/var/log/jitsi/jibri -type f -delete
+rm -rf $ROOTFS/home/jibri/.config/chromium
 
 # ------------------------------------------------------------------------------
 # ON HOST
