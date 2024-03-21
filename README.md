@@ -19,13 +19,13 @@ component without any user interaction.
 
 - `JMS` node is the core of the cluster.
 
-- Allow to add as many `JVBs` as needed to scale up the number of participants
+- Allow to add as many `JVB` as needed to scale up the number of participants
   and meetings.
 
-- Allow to add as many `Jibris` as needed to increase the number of concurrent
+- Allow to add as many `Jibri` as needed to increase the number of concurrent
   recordings.
 
-- Allow to add as many `sip-jibri` as needed to allow video-SIP participants.
+- Allow to add as many `SIP-Jibri` as needed to allow video-SIP participants.
 
 - Built-in `component-selector` to manage `jibri` and `sip-jibri` nodes
   programmatically. See
