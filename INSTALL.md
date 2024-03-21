@@ -33,7 +33,7 @@ cluster on `Debian 12 Bookworm`.
     - [3.1.4 SSH server](#314-ssh-server)
     - [3.1.5 JMS public key](#315-jms-public-key)
   - [3.2 Installation](#32-installation)
-- [4. Additional Video SIP Gateway](#4-additional-video-sip-gateway)
+- [4. Additional SIP-Jibri](#4-additional-sip-jibri)
   - [4.1 Prerequisites](#41-prerequisites)
     - [4.1.1 Supported distribution](#411-supported-distribution)
     - [4.1.2 Server specifications](#412-server-specifications)
@@ -44,7 +44,7 @@ cluster on `Debian 12 Bookworm`.
   - [4.3 Installation](#43-installation)
   - [4.4 Updating the PJSUA configuration](#44-updating-the-pjsua-configuration)
   - [4.5 Dial-plan](#45-dial-plan)
-- [5. Additional Video SIP Gateway (without LXC)](#5-additional-video-sip-gateway-without-lxc)
+- [5. Additional SIP-Jibri (without LXC)](#5-additional-sip-jibri-without-lxc)
   - [5.1 Prerequisites](#51-prerequisites)
     - [5.1.1 Supported distribution](#511-supported-distribution)
     - [5.1.2 Server specifications](#512-server-specifications)
@@ -112,8 +112,8 @@ host turn.nordeck.corp
   _If Lets Encrypt is used_
 
 - `TCP/5222`\
-  _If there are additional `JVB`, `Jibri` or `Video-SIP-Gateway` nodes which
-  access `JMS` through the public IP_
+  _If there are additional `JVB`, `Jibri` or `SIP-Jibri` nodes which access
+  `JMS` through the public IP_
 
 - `UDP/10000`\
   _If the internal `JVB` on `JMS` will be kept enabled. It is enabled by
@@ -249,8 +249,7 @@ add-jvb-node <JVB-IP-ADDRESS>
 
 #### 3.1.3 Public Ports
 
-- `TCP/22`
-  \
+- `TCP/22`\
   _`SSH` port... This port must be accessible for `JMS`_
 
 #### 3.1.4 SSH server
@@ -289,7 +288,7 @@ Login as `root` to `JMS` and run `add-jibri-node` command using IP address of
 add-jibri-node <JIBRI-IP-ADDRESS>
 ```
 
-## 4. Additional Video SIP Gateway
+## 4. Additional SIP-Jibri
 
 ### 4.1 Prerequisites
 
@@ -299,15 +298,14 @@ add-jibri-node <JIBRI-IP-ADDRESS>
 
 #### 4.1.2 Server specifications
 
-- At least 8 CPU cores for each `video-sip-gateway` instance.
-- At least 8 GB RAM for each `video-sip-gateway` instance.
+- At least 8 CPU cores for each `SIP-Jibri` instance.
+- At least 8 GB RAM for each `SIP-Jibri` instance.
 - At least 8 GB disk.
-- Maximum 4 `video-sip-gateway` instances supported on a single server.
+- Maximum 4 `SIP-Jibri` instances supported on a single server.
 
 #### 4.1.3 Public Ports
 
-- `TCP/22`
-  \
+- `TCP/22`\
   _`SSH` port... This port must be accessible for `JMS`_
 
 #### 4.1.4 SSH server
@@ -321,7 +319,7 @@ apt-get install openssh-server
 #### 4.1.5 JMS public key
 
 The SSH public key of `JMS` must be in `/root/.ssh/authorized_keys` on
-`video-sip-gateway`.
+`SIP-Jibri`.
 
 _Set `JITSI_HOST` according to your Jitsi FQDN._
 
@@ -340,9 +338,9 @@ cat /tmp/jms.pub >>/root/.ssh/authorized_keys
 
 ### 4.2 Configuration
 
-Before adding the `video-sip-gateway` node, update `pjsua.config` template on
-`JMS` according to your environment. `add-sip-node` command uses it to configure
-the nodes.
+Before adding the `SIP-Jibri` node, update `pjsua.config` template on `JMS`
+according to your environment. `add-sip-node` command uses it to configure the
+nodes.
 
 The template file is in the `nordeck-jitsi` container.
 
@@ -365,7 +363,7 @@ Add SIP account info into it using the following format:
 ### 4.3 Installation
 
 Login as `root` to `JMS` and run `add-sip-node` command using IP address of
-`video-sip-gateway`:
+`SIP-Jibri`:
 
 ```bash
 add-sip-node <SIP-IP-ADDRESS>
@@ -384,7 +382,7 @@ template files are in the `nordeck-jitsi` container.
   - `/var/lib/lxc/nordeck-jitsi/rootfs/root/meta/pjsua.config`
   - `/var/lib/lxc/nordeck-jitsi/rootfs/root/meta/env.sidecar.sip`
 
-Then run `update-sip-config` command using IP address of `video-sip-gateway`:
+Then run `update-sip-config` command using IP address of `SIP-Jibri`:
 
 ```bash
 update-sip-config <SIP-IP-ADDRESS>
@@ -399,7 +397,7 @@ Update `/var/lib/lxc/nordeck-dialplan/rootfs/home/dialplan/app/dial-plan.json`
 to set available SIP peers for `Jitsi` UI. This list is only accessible for
 moderator users.
 
-## 5. Additional Video SIP Gateway (without LXC)
+## 5. Additional SIP-Jibri (without LXC)
 
 ### 5.1 Prerequisites
 
@@ -434,7 +432,7 @@ apt-get install openssh-server
 #### 5.1.5 JMS public key
 
 The SSH public key of `JMS` must be in `/root/.ssh/authorized_keys` on
-`video-sip-gateway`.
+`SIP-Jibri`.
 
 _Set `JITSI_HOST` according to your Jitsi FQDN._
 
@@ -454,7 +452,7 @@ cat /tmp/jms.pub >>/root/.ssh/authorized_keys
 ### 5.2 Installation
 
 Login as `root` to `JMS` and run `add-sip-vm` command using IP address of
-`video-sip-gateway`:
+`SIP-Jibri`:
 
 ```bash
 add-sip-vm <SIP-IP-ADDRESS>

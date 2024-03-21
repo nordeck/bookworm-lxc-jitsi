@@ -25,10 +25,9 @@ component without any user interaction.
 - Allow to add as many `Jibris` as needed to increase the number of concurrent
   recordings.
 
-- Allow to add as many `video-sip-gateway` as needed to allow the video-SIP
-  participants.
+- Allow to add as many `sip-jibri` as needed to allow video-SIP participants.
 
-- Built-in `component-selector` to manage `jibri` and `video-sip-gateway` nodes
+- Built-in `component-selector` to manage `jibri` and `sip-jibri` nodes
   programmatically. See
   [component-selector-api-examples](/docs/component-selector-api-examples)
   folder for more details.
