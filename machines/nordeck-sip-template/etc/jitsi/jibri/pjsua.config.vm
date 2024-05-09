@@ -7,7 +7,6 @@
 --app-log-level=5
 --auto-update-nat 0
 --disable-stun
---no-tcp
 --dis-codec GSM
 --dis-codec H263
 --dis-codec iLBC
