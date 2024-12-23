@@ -29,7 +29,7 @@ apt-get $APT_PROXY -y install redis
 # nodejs
 cp etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/
 wget -T 30 -qO /tmp/nodesource.gpg.key \
-    https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
 cat /tmp/nodesource.gpg.key | gpg --dearmor >/usr/share/keyrings/nodesource.gpg
 apt-get $APT_PROXY update
 
