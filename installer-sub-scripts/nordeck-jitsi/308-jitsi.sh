@@ -437,10 +437,6 @@ cp etc/prosody/conf.avail/guest.cfg.lua \
 ln -s ../conf.avail/guest.$JITSI_FQDN.cfg.lua \
     $ROOTFS/etc/prosody/conf.d/
 
-# lua modules
-cp usr/share/jitsi-meet/prosody-plugins/*.lua \
-    $ROOTFS/usr/share/jitsi-meet/prosody-plugins/
-
 # token related
 sed -i '/\s*app_secret=/a \
 \    allow_empty_token = true \
