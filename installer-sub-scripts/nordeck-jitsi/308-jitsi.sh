@@ -247,9 +247,9 @@ echo $JITSI_FQDN >/root/meta/jitsi-fqdn
 EOS
 
 # jvb
-JVB_SHARD_PASSWD=$(egrep '^org.jitsi.videobridge.xmpp.user.shard.PASSWORD=' \
-    $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties | \
-    cut -d '=' -f2)
+JVB_SHARD_PASSWD=$(hocon -f /etc/jitsi/videobridge/jvb.conf \
+    get videobridge.apis.xmpp-client.configs.shard.PASSWORD | \
+    tr -d '"')
 
 lxc-attach -n $MACH -- zsh <<EOS
 set -e
@@ -541,8 +541,6 @@ lxc-attach -n $MACH -- systemctl start nginx.service
 cp $ROOTFS/etc/jitsi/videobridge/config $ROOTFS/etc/jitsi/videobridge/config.org
 cp $ROOTFS/etc/jitsi/videobridge/jvb.conf \
     $ROOTFS/etc/jitsi/videobridge/jvb.conf.org
-cp $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties \
-    $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties.org
 
 # add the custom config
 cat etc/jitsi/videobridge/config.custom >>$ROOTFS/etc/jitsi/videobridge/config

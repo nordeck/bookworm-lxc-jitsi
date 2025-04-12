@@ -163,8 +163,6 @@ EOS
 cp $ROOTFS/etc/jitsi/videobridge/config $ROOTFS/etc/jitsi/videobridge/config.org
 cp $ROOTFS/etc/jitsi/videobridge/jvb.conf \
     $ROOTFS/etc/jitsi/videobridge/jvb.conf.org
-cp $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties \
-    $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties.org
 
 # add the custom config
 cat etc/jitsi/videobridge/config.custom >>$ROOTFS/etc/jitsi/videobridge/config
@@ -179,10 +177,17 @@ hocon -f /etc/jitsi/videobridge/jvb.conf \
 EOS
 
 # cluster related
-sed -i "s/shard.HOSTNAME=.*/shard.HOSTNAME=$JITSI_FQDN/" \
-    $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties
-sed -i "s/shard.PASSWORD=.*/shard.PASSWORD=$JVB_SHARD_PASSWD/" \
-    $ROOTFS/etc/jitsi/videobridge/sip-communicator.properties
+lxc-attach -n $MACH -- zsh <<EOS
+set -e
+hocon -f /etc/jitsi/videobridge/jvb.conf \
+    set videobridge.apis.xmpp-client.configs.shard.DISABLE_CERTIFICATE_VERIFICATION \
+    true
+hocon -f /etc/jitsi/videobridge/jvb.conf \
+    set videobridge.apis.xmpp-client.configs.shard.HOSTNAME $JITSI_FQDN
+hocon -f /etc/jitsi/videobridge/jvb.conf \
+    set videobridge.apis.xmpp-client.configs.shard.PASSWORD \
+    \"$JVB_SHARD_PASSWD\"
+EOS
 
 # NAT harvester. these will be needed if this is an in-house server.
 cat etc/jitsi/videobridge/sip-communicator.custom.properties \
