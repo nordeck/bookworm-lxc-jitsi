@@ -247,7 +247,8 @@ echo $JITSI_FQDN >/root/meta/jitsi-fqdn
 EOS
 
 # jvb
-JVB_SHARD_PASSWD=$(hocon -f /etc/jitsi/videobridge/jvb.conf \
+JVB_SHARD_PASSWD=$(lxc-attach -n $MACH -- \
+    hocon -f /etc/jitsi/videobridge/jvb.conf \
     get videobridge.apis.xmpp-client.configs.shard.PASSWORD | \
     tr -d '"')
 
