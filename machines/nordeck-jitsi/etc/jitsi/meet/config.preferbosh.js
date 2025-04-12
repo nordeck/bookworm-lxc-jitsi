@@ -1,0 +1,3 @@
+
+// preferBosh
+config.preferBosh = true;

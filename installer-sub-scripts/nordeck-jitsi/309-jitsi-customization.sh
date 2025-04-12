@@ -36,6 +36,9 @@ cat $MACHINES/$TAG-jitsi/etc/jitsi/meet/config.hiddendomain.js >> $CONFIG_JS
 # whiteboard
 cat $MACHINES/$TAG-jitsi/etc/jitsi/meet/config.whiteboard.js >> $CONFIG_JS
 
+# prefer bosh
+cat $MACHINES/$TAG-jitsi/etc/jitsi/meet/config.preferbosh.js >> $CONFIG_JS
+
 # UI customizations
 cat $MACHINES/$TAG-jitsi/etc/jitsi/meet/config.ui.js >> $CONFIG_JS
 
